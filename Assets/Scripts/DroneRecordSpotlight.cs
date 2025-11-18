@@ -4,8 +4,8 @@ using UnityEngine;
 public class DroneRecordSpotlight : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private Light recordLight;          // Spot Light component
-    [SerializeField] private Renderer coneRenderer;      // Visual cone mesh renderer
+    [SerializeField] private Light recordLight;      // Spot Light component
+    [SerializeField] private Renderer coneRenderer;  // Visual cone mesh renderer
 
     [Header("Beam Settings")]
     [ColorUsage(true, true)]
@@ -26,7 +26,7 @@ public class DroneRecordSpotlight : MonoBehaviour
     private void Awake()
     {
         ApplySettings();
-        SetBeamActive(false);
+        SetBeamActive(false); // off by default
     }
 
     private void OnValidate()
@@ -47,7 +47,7 @@ public class DroneRecordSpotlight : MonoBehaviour
             recordLight.intensity = intensity;
             recordLight.range = range;
             recordLight.spotAngle = spotAngle;
-            recordLight.shadows = LightShadows.None; // safe default for Quest
+            recordLight.shadows = LightShadows.None; // good for Quest performance
         }
 
         if (coneRenderer != null)
@@ -72,13 +72,9 @@ public class DroneRecordSpotlight : MonoBehaviour
     private void SetBeamActive(bool active)
     {
         if (recordLight != null)
-        {
             recordLight.enabled = active;
-        }
 
         if (coneRenderer != null)
-        {
             coneRenderer.enabled = active;
-        }
     }
 }
