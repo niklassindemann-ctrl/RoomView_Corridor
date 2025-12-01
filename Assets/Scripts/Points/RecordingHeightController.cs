@@ -87,7 +87,12 @@ namespace Points
 				_recordingGhostRenderer.gameObject.SetActive(true);
 			}
 			
-			Debug.LogError($"RecordingHeightController: Recording ghost FORCEFULLY activated at {_anchorPosition}. Active={_recordingGhostTransform.gameObject.activeSelf}, RendererCount={allRenderers.Length}");
+		// Hide any distance labels on the recording ghost (they're duplicated from main ghost)
+		Debug.LogError("=== ATTEMPTING TO DISABLE RECORDING GHOST LABELS ===");
+		DisableLabelsOnRecordingGhost();
+		Debug.LogError("=== FINISHED DISABLING RECORDING GHOST LABELS ===");
+		
+		Debug.LogError($"RecordingHeightController: Recording ghost FORCEFULLY activated at {_anchorPosition}. Active={_recordingGhostTransform.gameObject.activeSelf}, RendererCount={allRenderers.Length}");
 		}
 		else
 		{
@@ -346,6 +351,34 @@ namespace Points
 		{
 			_environmentLayer = layer;
 		}
+		
+	/// <summary>
+	/// Disable any PointLabelBillboard or TextMesh components on the recording ghost.
+	/// The recording ghost is a duplicate of the main ghost, so it inherits distance labels.
+	/// FIXED: Disables the "Depth Readout" child GameObject by name.
+	/// </summary>
+	private void DisableLabelsOnRecordingGhost()
+	{
+		if (_recordingGhostTransform == null)
+		{
+			Debug.LogError("DisableLabelsOnRecordingGhost: _recordingGhostTransform is NULL!");
+			return;
+		}
+		
+		Debug.LogError($"RecordingHeightController: Scanning {_recordingGhostTransform.name} for labels...");
+		
+		// SOLUTION: Find and disable the "Depth Readout" child by name
+		Transform depthReadoutChild = _recordingGhostTransform.Find("Depth Readout");
+		if (depthReadoutChild != null)
+		{
+			depthReadoutChild.gameObject.SetActive(false);
+			Debug.LogError($"✅ DISABLED 'Depth Readout' child on {_recordingGhostTransform.name}!");
+		}
+		else
+		{
+			Debug.LogError($"⚠️ No 'Depth Readout' child found on {_recordingGhostTransform.name}");
+		}
+	}
 	}
 }
 

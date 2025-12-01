@@ -303,8 +303,11 @@ namespace Points
 	/// </summary>
 	private void HandleRecord360Placement()
 	{
+		Debug.LogError($"=== HandleRecord360Placement called, state={_recordPlacementState} ===");
+		
 		if (_recordPlacementState == RecordPlacementState.None)
 		{
+			Debug.LogError("=== STEP 1: PLACING ANCHOR POINT ===");
 			// Step 1: Place anchor point
 			Vector3 anchorPosition = _ghostTransform.position;
 			var experimentManager = Experiment.ExperimentDataManager.Instance;
@@ -329,11 +332,30 @@ namespace Points
 		{
 			_anchorGhostTransform.position = anchorPosition;
 			_anchorGhostTransform.gameObject.SetActive(true);
+			
+			Debug.LogError($"=== AnchorGhost Name: {_anchorGhostTransform.name}, Children: {_anchorGhostTransform.childCount} ===");
+			
+			// Hide any distance labels on the anchor ghost
+			Debug.LogError("=== ATTEMPTING TO DISABLE ANCHOR GHOST LABELS ===");
+			DisableLabelsOnGhost(_anchorGhostTransform);
+			Debug.LogError("=== FINISHED DISABLING ANCHOR GHOST LABELS ===");
+			
 			Debug.LogError($"AnchorGhost shown at {anchorPosition}, Active={_anchorGhostTransform.gameObject.activeSelf}");
 		}
 		else
 		{
 			Debug.LogError("ERROR: AnchorGhost transform is NULL! Not assigned in Inspector!");
+		}
+		
+		// ALSO: Make absolutely sure the main depth readout is hidden
+		if (_depthReadout != null)
+		{
+			Debug.LogError($"=== Main DepthReadout exists, hiding it. Name: {_depthReadout.gameObject.name} ===");
+			_depthReadout.gameObject.SetActive(false);
+		}
+		else
+		{
+			Debug.LogError("=== Main DepthReadout is NULL ===");
 		}
 
 		// Activate recording height controller
@@ -348,11 +370,18 @@ namespace Points
 		{
 			_ghostTransform.gameObject.SetActive(false);
 		}
+		
+		// Hide the main depth readout during Record360 adjustment
+		if (_depthReadout != null)
+		{
+			_depthReadout.gameObject.SetActive(false);
+		}
 
 		Debug.Log($"Record360 Anchor placed at {anchorPosition}. Adjust recording height and press Enter to confirm.");
 		}
 		else if (_recordPlacementState == RecordPlacementState.AdjustingHeight)
 		{
+			Debug.LogError("=== STEP 2: CONFIRMING RECORDING HEIGHT ===");
 			// Step 2: Confirm recording height and create waypoint
 			ConfirmRecord360Placement();
 		}
@@ -456,6 +485,12 @@ namespace Points
 		{
 			_ghostTransform.gameObject.SetActive(true);
 		}
+		
+		// Re-enable the main depth readout
+		if (_depthReadout != null)
+		{
+			_depthReadout.gameObject.SetActive(true);
+		}
 
 		// Reset state
 		_recordPlacementState = RecordPlacementState.None;
@@ -486,6 +521,12 @@ namespace Points
 		if (_ghostTransform != null)
 		{
 			_ghostTransform.gameObject.SetActive(true);
+		}
+		
+		// Re-enable the main depth readout
+		if (_depthReadout != null)
+		{
+			_depthReadout.gameObject.SetActive(true);
 		}
 
 		// Reset state
@@ -906,6 +947,34 @@ namespace Points
 					return Experiment.PointType.StopAndRotate;
 			}
 		}
+		
+	/// <summary>
+	/// Disable any PointLabelBillboard components on a ghost to prevent distance labels from showing.
+	/// This is needed because recording/anchor ghosts are duplicates of the main ghost.
+	/// FIXED: Disables the "Depth Readout" child GameObject by name.
+	/// </summary>
+	private void DisableLabelsOnGhost(Transform ghostTransform)
+	{
+		if (ghostTransform == null)
+		{
+			Debug.LogError("DisableLabelsOnGhost: ghostTransform is NULL!");
+			return;
+		}
+		
+		Debug.LogError($"PointPlacementManager: Scanning {ghostTransform.name} for labels...");
+		
+		// SOLUTION: Find and disable the "Depth Readout" child by name
+		Transform depthReadoutChild = ghostTransform.Find("Depth Readout");
+		if (depthReadoutChild != null)
+		{
+			depthReadoutChild.gameObject.SetActive(false);
+			Debug.LogError($"✅ DISABLED 'Depth Readout' child on {ghostTransform.name}!");
+		}
+		else
+		{
+			Debug.LogError($"⚠️ No 'Depth Readout' child found on {ghostTransform.name}");
+		}
+	}
 	}
 }
 

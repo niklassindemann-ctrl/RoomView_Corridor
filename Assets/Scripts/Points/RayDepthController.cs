@@ -177,7 +177,11 @@ namespace Points
 		_manager.UpdateGhostVisualValidity(valid && (!useSnap || snapped || Mathf.Abs(_currentDepth - Mathf.Clamp(_currentDepth, _manager.MinDepth, _manager.MaxDepth)) < 0.0001f));
 	}
 
-	_manager.UpdateReadout($"{_currentDepth:F2} m");
+	// Don't update the readout during Record360 adjustment (it's hidden anyway)
+	if (!_manager.IsAdjustingRecordingHeight)
+	{
+		_manager.UpdateReadout($"{_currentDepth:F2} m");
+	}
 
 	if (_rayLine != null)
 	{
