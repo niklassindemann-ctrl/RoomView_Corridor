@@ -75,3 +75,7 @@ crashlytics-build.properties
 # ETC
 .DS_Store
 
+# Large model files
+Assets/staircase with elevator.glb
+Assets/03.12.2025 updated staircase obj/
+
