@@ -319,7 +319,7 @@ namespace Points
 			fromPos = pt != null ? pt.transform.position : Vector3.zero;
 		}
 		
-		Vector3 toPos = startEndPoint.transform.position;
+		Vector3 toPos = startEndPoint.Position;
 
 		if (SegmentBlockedBetween(fromPos, toPos))
 		{
@@ -611,6 +611,49 @@ namespace Points
 							prevHandle.transform.position, 
 							pointHandle.transform.position
 						);
+					}
+				}
+			}
+			
+			// Create segment from Start → first waypoint if this is the first waypoint
+			// Check if previousPointId is Start point (-1) or if route's last point is Start
+			if (_pathManager != null && activeRoute != null)
+			{
+				bool isFirstWaypoint = false;
+				
+				if (previousPointId.HasValue && previousPointId.Value == -1)
+				{
+					// Previous point is Start point, so this is the first waypoint
+					isFirstWaypoint = true;
+				}
+				else if (!previousPointId.HasValue && activeRoute != null)
+				{
+					// No previous waypoint found, check if route's last point is Start point
+					if (activeRoute.PointIds.Count > 0)
+					{
+						int lastPointId = activeRoute.PointIds[activeRoute.PointIds.Count - 1];
+						if (lastPointId == -1) // Start point
+						{
+							isFirstWaypoint = true;
+						}
+					}
+				}
+				
+				if (isFirstWaypoint)
+				{
+					var startPoint = _pathManager.GetStartPoint();
+					if (startPoint != null)
+					{
+						var experimentManager = Experiment.ExperimentDataManager.Instance;
+						if (experimentManager != null)
+						{
+							experimentManager.OnSegmentCreated(
+								-1, // Start point ID
+								pointHandle.Id,
+								startPoint.Position,
+								pointHandle.transform.position
+							);
+						}
 					}
 				}
 			}

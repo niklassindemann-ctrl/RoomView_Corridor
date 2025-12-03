@@ -145,6 +145,10 @@ namespace Experiment
                 return;
             }
 
+            // Create segment from last waypoint → End point BEFORE setting _trialActive to false
+            // (OnSegmentCreated checks _trialActive)
+            CreateEndSegment();
+            
             _trialActive = false;
             LogEvent("TrialSubmitted");
 
@@ -152,6 +156,28 @@ namespace Experiment
             string filePath = SaveTrialData();
 
             Debug.Log($"[ExperimentDataManager] Trial complete! Data saved to: {filePath}");
+        }
+        
+        private void CreateEndSegment()
+        {
+            if (_flightPathManager == null) return;
+            
+            var endPoint = _flightPathManager.GetEndPoint();
+            if (endPoint == null) return;
+            
+            // Find the last active waypoint
+            var activeWaypoints = _waypoints.Where(w => !w.wasDeleted).OrderBy(w => w.id).ToList();
+            if (activeWaypoints.Count == 0) return;
+            
+            var lastWaypoint = activeWaypoints[activeWaypoints.Count - 1];
+            
+            // Create segment from last waypoint to end point
+            OnSegmentCreated(
+                lastWaypoint.id,
+                -2, // End point ID
+                lastWaypoint.position,
+                endPoint.Position
+            );
         }
 
         #endregion
@@ -425,11 +451,11 @@ namespace Experiment
                     totalPlaced = _totalPointsPlaced,
                     totalDeleted = _totalPointsDeleted,
                     finalCount = activeWaypoints.Count,
-                    byType = new Dictionary<string, int>
+                    byType = new WaypointTypeCounts
                     {
-                        { "FlyThrough", _pointTypeCount[PointType.FlyThrough] },
-                        { "StopRotate", _pointTypeCount[PointType.StopAndRotate] },
-                        { "Record360", _pointTypeCount[PointType.Record360] }
+                        FlyThrough = _pointTypeCount[PointType.FlyThrough],
+                        StopRotate = _pointTypeCount[PointType.StopAndRotate],
+                        Record360 = _pointTypeCount[PointType.Record360]
                     }
                 },
 
@@ -464,9 +490,10 @@ namespace Experiment
             // Serialize to JSON
             string json = JsonUtility.ToJson(trialData, true);
 
-            // Determine save path
+            // Determine save path with timestamp to avoid overwriting
             string folderPath = GetSaveFolderPath();
-            string fileName = $"{participantID}_{taskVariant}.json";
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string fileName = $"{participantID}_{taskVariant}_{timestamp}.json";
             string fullPath = Path.Combine(folderPath, fileName);
 
             // Ensure directory exists
@@ -581,7 +608,15 @@ namespace Experiment
         public int totalPlaced;
         public int totalDeleted;
         public int finalCount;
-        public Dictionary<string, int> byType;
+        public WaypointTypeCounts byType;
+    }
+
+    [Serializable]
+    public class WaypointTypeCounts
+    {
+        public int FlyThrough;
+        public int StopRotate;
+        public int Record360;
     }
 
     [Serializable]

@@ -18,9 +18,6 @@ namespace Player
 		[SerializeField] private string _parentObjectName = "test ring";
 		
 		[Header("Constraint Settings")]
-		[Tooltip("Height tolerance above ring floor (default: 0.1m)")]
-		[SerializeField] private float _heightTolerance = 0.1f;
-		
 		[Tooltip("Enable constraint (can be toggled at runtime)")]
 		[SerializeField] private bool _constraintEnabled = true;
 		
